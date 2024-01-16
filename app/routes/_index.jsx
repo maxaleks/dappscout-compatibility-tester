@@ -30,8 +30,7 @@ export default function MainRoute() {
           const iframes = Array.from(document.querySelectorAll('iframe'));
           const iframe = iframes.find(i => i.contentWindow === event.source);
           if (iframe) {
-            const index = apps.findIndex(app => app.id === iframe.id);
-            apps[index].internalWallet = true;
+            apps[iframe.id].internalWallet = true;
             iframe.remove();
           }
         }
@@ -39,11 +38,11 @@ export default function MainRoute() {
 
       window.addEventListener('message', handleEvent);
 
-      async function processBatch(batch) {
-        return Promise.all(batch.map(app =>
+      async function processBatch(batch, batchStartIndex) {
+        return Promise.all(batch.map((app, index) =>
           new Promise(resolve => {
             const iframe = document.createElement('iframe');
-            iframe.id = app.id;
+            iframe.id = batchStartIndex + index;
             iframe.src = app.url;
             iframe.sandbox = IFRAME_SANDBOX_ATTRIBUTE;
             iframe.allow = IFRAME_ALLOW_ATTRIBUTE;
@@ -58,7 +57,7 @@ export default function MainRoute() {
 
       for (let i = 0; i < apps.length; i += batchSize) {
         const batch = apps.slice(i, i + batchSize);
-        await processBatch(batch);
+        await processBatch(batch, i);
       }
 
       setOutputData(JSON.stringify(apps, null, "  "));
