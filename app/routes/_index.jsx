@@ -25,7 +25,7 @@ export default function MainRoute() {
     try {
       const apps = JSON.parse(inputData).map(app => ({ ...app, internalWallet: false }));
 
-      window.addEventListener('message', (event) => {
+      const handleEvent = (event) => {
         if (event.data.method === 'getSafeInfo') {
           const iframes = Array.from(document.querySelectorAll('iframe'));
           const iframe = iframes.find(i => i.contentWindow === event.source);
@@ -35,7 +35,9 @@ export default function MainRoute() {
             iframe.remove();
           }
         }
-      });
+      }
+
+      window.addEventListener('message', handleEvent);
 
       async function processBatch(batch) {
         return Promise.all(batch.map(app =>
@@ -60,6 +62,8 @@ export default function MainRoute() {
       }
 
       setOutputData(JSON.stringify(apps, null, "  "));
+
+      window.removeEventListener('message', handleEvent);
     } catch (e) {
       alert(e.message);
     }
